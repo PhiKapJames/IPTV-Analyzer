@@ -212,6 +212,8 @@ static void mpeg2ts_mt_print(const void *entry,
 	case XT_MPEG2TS_FORMAT_RAW:
 		printf(" format:raw");
 		break;
+	default:
+		printf(" format:auto");
 	}
 }
 
@@ -240,6 +242,8 @@ static void mpeg2ts_mt_save(const void *entry,
 	case XT_MPEG2TS_FORMAT_RAW:
 		printf(" --format raw");
 		break;
+	default:
+		printf(" --format auto");
 	}
 }
 

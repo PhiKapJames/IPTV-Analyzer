@@ -95,9 +95,11 @@ static const struct file_operations dl_file_ops;
 	)
 #endif
 
-static int debug  = -1;
+//static int debug  = -1;
+static int debug  = 1;
 static int msg_level;
-module_param(debug, int, 0);
+//module_param(debug, int, 0);
+module_param(debug, int, 1);
 module_param(msg_level, int, 0664);
 MODULE_PARM_DESC(debug, "Set low N bits of message level");
 MODULE_PARM_DESC(msg_level, "Message level bit mask");
@@ -109,9 +111,9 @@ MODULE_PARM_DESC(msg_level, "Message level bit mask");
 /* #undef DEBUG */
 /* #define DEBUG 1 */
 
-#ifdef NO_MSG_CODE
-#undef DEBUG
-#endif
+//#ifdef NO_MSG_CODE
+//#undef DEBUG
+//#endif
 
 #ifdef DEBUG
 #define msg_dbg(TYPE, f, a...)						\
@@ -1121,9 +1123,42 @@ is_mpeg2ts_packet(const unsigned char *payload_ptr, uint16_t payload_len)
 
 static uint16_t
 get_rtp_header_length(const unsigned char *payload_ptr, uint16_t payload_len)
-{
+{	
+	/* http://en.wikipedia.org/wiki/Real-time_Transport_Protocol#Packet_header */
+	/* This implementation doesn't work if paddign exists, would require looking at
+	   the last byte of the padding to know the number of padding bytes that were added */
+
+	
+	/* Add a check to see if this is really RTP header */
+
+
+	/* Extension: Is bit in position 3 set to 1 to indicate an extension? */
+
+
+	/* Determine the number of CSRC identifiers (4 bits) in position 4 -7 */
+	
+
+	/* If there are CSCR identifiers, then calculate the next header section by
+	   96+32*CC (CC = 4 bit values in 4 - 7) */
+
+	
+	/* If the extension header is set, then calculate the extension header length.
+	   The bits 16-32 of the extension header define the size of the extension header,
+	   can be found at (96+(32*CC)+16) and is 16 bits. */
+
+	
+	/* Now we can get the size of the extension header to skip by:
+	   (128+32*CC) + (extension header size found above) */
+
+
+
+
+
 	/* currently, only non-padded, non-extended, non-mixed RTP is supported */
-	return *payload_ptr == 0x80 ? 12 : 0;
+	/* Is current payload pointer at 128? This is taking into account that the RTP 
+           header has a minimum size of 12 bytes (96 bits). If so, then this is basic RTP
+           so return the pointer past it to the payload */
+	//return *payload_ptr == 0x80 ? 12 : 0;
 }
 
 
@@ -1196,6 +1231,7 @@ xt_mpeg2ts_match(const struct sk_buff *skb, struct xt_action_param *par)
 	/* How much do we need to skip to access payload data */
 	udp_hdr_size    = par->thoff + sizeof(struct udphdr);
 	payload_ptr = skb_network_header(skb) + udp_hdr_size;
+	
 	/* payload_ptr = skb->data + udp_hdr_size; */
 	BUG_ON(payload_ptr != (skb->data + udp_hdr_size));
 
